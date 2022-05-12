@@ -169,3 +169,78 @@ export url='https://shellclash.ga' && sh -c "$(curl -kfsSl $url/install.sh)" && 
 登录之后依次点击进入 `系统 -> 备份/升级 -> 刷写新的固件`  
 去掉勾选 `保留配置`，选择下载的固件 mt76.bin 或 open2.4g.bin 或者你下载的其它固件，点击 `刷写固件 -> 处理`  
 等待固件刷入完成即可。
+
+
+## 桥接模式下访问光猫后台
+### 小米路由器系统
+1. SSH 连接路由器  
+2. 编辑网络接口配置文件 `vim /etc/config/network`，找到 `wan` 相关配置如下：
+```
+config interface 'wan'
+        option proto 'pppoe'
+        option peerdns '0'
+        option username 'xxxxxxxxxxxx'
+        option password 'xxxxxx'
+        option special '0'
+        option mru '1480'
+        option ifname 'eth4'
+        option ipv6 'auto'
+```
+其中 option ifname 'eth4' 表示此接口使用的物理网卡是eth4。
+
+编辑文件 `/etc/config/network`，在文件尾部添加如下配置：
+```
+config interface 'modem'                  
+        option proto 'static'             
+        option ifname 'eth4'            
+        option ipaddr '192.168.1.100'     
+        option netmask '255.255.255.0' 
+```
+option ifname 和 wan 的 option ifname 相同，option ipaddr 设置为和光猫相同网段的IP地址。
+
+3. 编辑防火墙配置文件 `vim /etc/config/firewall`，找到如下配置：
+```
+config zone
+        option name 'wan'
+        list network 'wan'
+        list network 'wan6'
+        option input 'REJECT'
+        option output 'ACCEPT'
+        option forward 'REJECT'
+        option masq '1'
+        option mtu_fix '1'
+```
+在 `list network 'wan6'` 下面添加一行 `list network 'modem'`， 修改完成后的配置如下：
+```
+config zone
+        option name 'wan'
+        list network 'wan'
+        list network 'wan6'
+        list network 'modem'
+        option input 'REJECT'
+        option output 'ACCEPT'
+        option forward 'REJECT'
+        option masq '1'
+        option mtu_fix '1'
+```
+保存文件，重启路由器即可访问光猫后台管理界面。
+
+> 参考：
+https://blog.csdn.net/qq1337715208/article/details/121570165
+
+### OpenWRT 系统
+打开 OpenWRT 后台管理界面，在 `网络 -> 接口` 中添加一个新的接口配置如下：
+```
+名称：modem
+协议：静态地址
+接口：选择和 wan 相同的接口
+``` 
+点击 `提交`，然后在 modem 接口基本设置中 IPv4 地址设置为与光猫相同网段的地址，子网掩码设置为 255.255.255.0，防火墙设置中区域分配为 wan，配置如下：
+```
+# 基本设置
+IPv4 地址：192.168.1.100
+IPv4 子网掩码：255.255.255.0
+# 防火墙设置
+创建/分配防火墙区域：wan
+```
+点击 `保存&应用`，即可访问光猫管理界面。
