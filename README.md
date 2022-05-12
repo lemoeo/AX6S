@@ -1,4 +1,6 @@
-## AX6S 固化  Telnet / SSH
+# Redmi AX6S 解锁 SSH、安装 ShellClash、刷入 OpenWRT 教程
+
+## 解锁并固化 Telnet & SSH
 
 1. 升级开发版固件  
 下载 miwifi_rb03_firmware_stable_1.2.7.bin，浏览器打开 http://miwifi.com 进入小米路由器管理后台，打开 系统升级 -> 手动升级，选择下载的固件，将固件升级到开发版。
@@ -62,26 +64,26 @@ Telnet / SSH 用户名：root
         mtd -r write /tmp/Bdata_mtd5.img Bdata
         ```
     3. 清除解锁。修复WIFI客户端数量显示、Internet灯不亮等一些奇怪的问题
-        ```
+        ```shell
         mtd erase crash
         reboot
         ```
     > 自此， 无论是恢复出厂设置还是用官方修复工具刷机，Telnet 都是开启的状态。
 
 7. 系统版本切换  
-    ```
+    ```shell
     # 查看当前启动分区
     nvram get flag_last_success
     ```
     如果执行上面命令返回为`1`，说明当前开发版系统在`1`分区，执行下面命令切换到`0`分区的稳定版系统：
-    ```
+    ```shell
     nvram set flag_last_success=0
     nvram set flag_boot_rootfs=0
     nvram commit
     reboot
     ```
     如果返回为 `0`，说明当前开发版系统在`0`分区，执行下面命令切换到`1`分区的稳定版系统：
-    ```
+    ```shell
     nvram set flag_last_success=1
     nvram set flag_boot_rootfs=1
     nvram commit
@@ -91,7 +93,7 @@ Telnet / SSH 用户名：root
 8. 稳定版开启 SSH
     - 临时开启 SSH (路由器重启会失效)
     使用 Telnet 连接路由器，执行下面命令即可临时开启SSH：
-      ```
+      ```shell
       sed -i 's/channel=.*/channel=\"debug\"/g' /etc/init.d/dropbear
       /etc/init.d/dropbear restart
       ```
@@ -112,15 +114,58 @@ Telnet / SSH 用户名：root
       uci commit firewall
       ```
 
-> 自此，稳定版本固件重启也会自动开启SSH了。
-> 
-> 如果不需要自动开启 SSH 了，可以执行下面命令移除：
-```
-# 移除开机自动运行
-uci delete firewall.auto_ssh
-uci commit firewall
+    > 自此，稳定版本固件重启也会自动开启SSH了。
+    > 
+    > 如果不需要自动开启 SSH 了，可以执行下面命令移除：
+    ```shell
+    # 移除开机自动运行
+    uci delete firewall.auto_ssh
+    uci commit firewall
+    ```
+
+    > 参考教程：  
+    > https://www.right.com.cn/forum/thread-8206757-1-1.html  
+    > https://www.wutaijie.cn/?p=254
+
+
+## 官方固件安装 ShellClash
+使用 SSH 连接路由器，执行下面命令安装(选择一个源进行安装即可)：
+```shell
+#fastgit.org加速
+export url='https://raw.fastgit.org/juewuy/ShellClash/master' && sh -c "$(curl -kfsSl $url/install.sh)" && source /etc/profile &> /dev/null
+#GitHub源
+export url='https://raw.githubusercontent.com/juewuy/ShellClash/master' && sh -c "$(curl -kfsSl $url/install.sh)" && source /etc/profile &> /dev/null
+#jsDelivrCDN源
+export url='https://cdn.jsdelivr.net/gh/juewuy/ShellClash@master' && sh -c "$(curl -kfsSl $url/install.sh)" && source /etc/profile &> /dev/null
+#作者私人源
+export url='https://shellclash.ga' && sh -c "$(curl -kfsSl $url/install.sh)" && source /etc/profile &> /dev/null
 ```
 
-> 参考教程：  
-> https://www.right.com.cn/forum/thread-8206757-1-1.html  
-> https://www.wutaijie.cn/?p=254
+> ShellClash 项目地址：https://github.com/juewuy/ShellClash
+
+
+## 刷入 OpenWRT 固件
+### 选择一个固件并下载
+[【20220427】AX6S 开源/闭源无线驱动Openwrt 刷机教程/固件下载](https://www.right.com.cn/forum/thread-8187405-1-1.html)  
+[[更新v3][20220417]红米AX6S LEDE R22.4.1定制化多功能OpenWrt固件](https://www.right.com.cn/forum/thread-8219050-1-1.html)  
+[[更新][220423]红米AX6S OpenWrt官方master分支自用养老固件](https://www.right.com.cn/forum/thread-8214026-1-1.html)
+
+### 刷入下载的固件
+1. 使用 WinSCP 将下载的固件中的 factory.bin 上传到路由器的 /tmp 目录下。
+
+2. 使用 SSH 链接路由器，执行命令：
+    ```shell
+    # 设置启动第一个系统分区
+    nvram set flag_last_success=0 & nvram set flag_boot_rootfs=0
+    # 保存设置
+    nvram commit
+    # 刷入过度固件 factory.bin 到第一个系统分区 firmware 并重启路由器
+    mtd -r write /tmp/factory.bin firmware
+    ```
+
+3. 路由器重启完成之后，打开 http://192.168.6.1 进入 OpenWRT 后台管理界面  
+用户名：root  
+密码：password  
+登录之后依次点击进入 `系统 -> 备份/升级 -> 刷写新的固件`  
+去掉勾选 `保留配置`，选择下载的固件 mt76.bin 或 open2.4g.bin 或者你下载的其它固件，点击 `刷写固件 -> 处理`  
+等待固件刷入完成即可。
