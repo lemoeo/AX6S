@@ -175,58 +175,58 @@ export url='https://shellclash.ga' && sh -c "$(curl -kfsSl $url/install.sh)" && 
 ### 小米路由器系统
 1. SSH 连接路由器  
 2. 编辑网络接口配置文件 `vim /etc/config/network`，找到 `wan` 相关配置如下：
-```
-config interface 'wan'
-        option proto 'pppoe'
-        option peerdns '0'
-        option username 'xxxxxxxxxxxx'
-        option password 'xxxxxx'
-        option special '0'
-        option mru '1480'
-        option ifname 'eth4'
-        option ipv6 'auto'
-```
-其中 option ifname 'eth4' 表示此接口使用的物理网卡是eth4。
+    ```
+    config interface 'wan'
+            option proto 'pppoe'
+            option peerdns '0'
+            option username 'xxxxxxxxxxxx'
+            option password 'xxxxxx'
+            option special '0'
+            option mru '1480'
+            option ifname 'eth4'
+            option ipv6 'auto'
+    ```
+    其中 option ifname 'eth4' 表示此接口使用的物理网卡是 `eth4`
 
-编辑文件 `/etc/config/network`，在文件尾部添加如下配置：
-```
-config interface 'modem'                  
-        option proto 'static'             
-        option ifname 'eth4'            
-        option ipaddr '192.168.1.100'     
-        option netmask '255.255.255.0' 
-```
-option ifname 和 wan 的 option ifname 相同，option ipaddr 设置为和光猫相同网段的IP地址。
+    编辑文件 `/etc/config/network`，在文件尾部添加如下配置：
+    ```
+    config interface 'modem'                  
+            option proto 'static'             
+            option ifname 'eth4'            
+            option ipaddr '192.168.1.100'     
+            option netmask '255.255.255.0' 
+    ```
+    option ifname 和 wan 的 option ifname 相同，option ipaddr 设置为和光猫相同网段的IP地址。
 
 3. 编辑防火墙配置文件 `vim /etc/config/firewall`，找到如下配置：
-```
-config zone
-        option name 'wan'
-        list network 'wan'
-        list network 'wan6'
-        option input 'REJECT'
-        option output 'ACCEPT'
-        option forward 'REJECT'
-        option masq '1'
-        option mtu_fix '1'
-```
-在 `list network 'wan6'` 下面添加一行 `list network 'modem'`， 修改完成后的配置如下：
-```
-config zone
-        option name 'wan'
-        list network 'wan'
-        list network 'wan6'
-        list network 'modem'
-        option input 'REJECT'
-        option output 'ACCEPT'
-        option forward 'REJECT'
-        option masq '1'
-        option mtu_fix '1'
-```
-保存文件，重启路由器即可访问光猫后台管理界面。
+    ```
+    config zone
+            option name 'wan'
+            list network 'wan'
+            list network 'wan6'
+            option input 'REJECT'
+            option output 'ACCEPT'
+            option forward 'REJECT'
+            option masq '1'
+            option mtu_fix '1'
+    ```
+    在 `list network 'wan6'` 下面添加一行 `list network 'modem'`， 修改完成后的配置如下：
+    ```
+    config zone
+            option name 'wan'
+            list network 'wan'
+            list network 'wan6'
+            list network 'modem'
+            option input 'REJECT'
+            option output 'ACCEPT'
+            option forward 'REJECT'
+            option masq '1'
+            option mtu_fix '1'
+    ```
+    保存文件，重启路由器即可访问光猫后台管理界面。
 
-> 参考：
-https://blog.csdn.net/qq1337715208/article/details/121570165
+    > 参考教程：  
+    https://blog.csdn.net/qq1337715208/article/details/121570165
 
 ### OpenWRT 系统
 打开 OpenWRT 后台管理界面，在 `网络 -> 接口` 中添加一个新的接口配置如下：
