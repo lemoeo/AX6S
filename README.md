@@ -3,7 +3,7 @@
 ## 解锁并固化 Telnet & SSH
 
 1. 升级开发版固件  
-下载 miwifi_rb03_firmware_stable_1.2.7.bin，浏览器打开 http://miwifi.com 进入小米路由器管理后台，打开 系统升级 -> 手动升级，选择下载的固件，将固件升级到开发版。
+下载 [miwifi_rb03_firmware_stable_1.2.7.bin](https://cdn.jsdelivr.net/gh/lemoeo/AX6S@main/miwifi_rb03_firmware_stable_1.2.7.bin)，浏览器打开 http://miwifi.com 进入小米路由器管理后台，打开 系统升级 -> 手动升级，选择下载的固件，将固件升级到开发版。
 
 2. 获取 root 密码  
 打开  https://www.oxygen7.cn/miwifi/ ，输入路由器后台右下角完整的 SN 号，点击 Go 即可计算出 root 密码。
@@ -32,34 +32,34 @@ Telnet / SSH 用户名：root
     3. 打开 WinSCP ，使用 SCP 协议连接路由器，将备份的 Bdata_mtd5.img 和 crash_mtd7.img 下载保存好。
 
 5. 修改 Bdata 和 crash 实现固化 Telnet / SSH
-    1. 使用 HxD.exe 打开 crash_mtd7.img，将开头修改为 `A5 5A 00 00`，然后保存即可，如图。
-    ![image](https://github.com/lemoeo/AX6S/raw/main/doc/1.png)
+    1. 使用 HxD.exe 打开 crash_mtd7.img，将开头修改为 `A5 5A 00 00`，然后保存即可，如图：  
+    ![image](https://cdn.jsdelivr.net/gh/lemoeo/AX6S@main/doc/1.png)
     2. 使用 HxD.exe 打开 Bdata_mtd5.img
-    将 telnet_en、ssh_en、uart_en 的值修改为`1`，如图：
-    ![image](https://github.com/lemoeo/AX6S/raw/main/doc/2.png)
-    复制`boot_wait=on`，以覆盖方式粘贴到图中位置：
-    ![image](https://github.com/lemoeo/AX6S/raw/main/doc/3.png)
-    此时修改后的效果如图：
-    ![image](https://github.com/lemoeo/AX6S/raw/main/doc/4.png)
-    计算校验和，首先点击编辑-选择块
-    ![image](https://github.com/lemoeo/AX6S/raw/main/doc/5.png)
-    起始偏移输入4，结束偏移输入FFFF，点击确定
-    ![image](https://github.com/lemoeo/AX6S/raw/main/doc/6.png)
-    点击分析-校验码
-    ![image](https://github.com/lemoeo/AX6S/raw/main/doc/7.png)
-    选择CRC-32，点击确定
-    ![image](https://github.com/lemoeo/AX6S/raw/main/doc/8.png)
-    将开头四个字节修改为计算出的校验和的逆序的方式。
-    ![image](https://github.com/lemoeo/AX6S/raw/main/doc/9.png)
-    修改完成，点击保存。
-    ![image](https://github.com/lemoeo/AX6S/raw/main/doc/10.png)
+    将 telnet_en、ssh_en、uart_en 的值修改为 `1`，如图：  
+    ![image](https://cdn.jsdelivr.net/gh/lemoeo/AX6S@main/doc/2.png)  
+    复制 `boot_wait=on`，以覆盖方式粘贴到图中位置：  
+    ![image](https://cdn.jsdelivr.net/gh/lemoeo/AX6S@main/doc/3.png)  
+    此时修改后的效果如图：  
+    ![image](https://cdn.jsdelivr.net/gh/lemoeo/AX6S@main/doc/4.png)  
+    计算校验和，首先点击 `编辑 -> 选择块`  
+    ![image](https://cdn.jsdelivr.net/gh/lemoeo/AX6S@main/doc/5.png)  
+    起始偏移输入 `4`，结束偏移输入 `FFFF`，点击 `确定`  
+    ![image](https://cdn.jsdelivr.net/gh/lemoeo/AX6S@main/doc/6.png)  
+    点击 `分析 -> 校验码`  
+    ![image](https://cdn.jsdelivr.net/gh/lemoeo/AX6S@main/doc/7.png)  
+    选择 `CRC-32`，点击 `确定`  
+    ![image](https://cdn.jsdelivr.net/gh/lemoeo/AX6S@main/doc/8.png)  
+    将开头四个字节修改为计算出的校验和的逆序的方式  
+    ![image](https://cdn.jsdelivr.net/gh/lemoeo/AX6S@main/doc/9.png)  
+    修改完成，点击 `保存`  
+    ![image](https://cdn.jsdelivr.net/gh/lemoeo/AX6S@main/doc/10.png)
 
 6. 刷入修改过的 Bdata_mtd5.img 和 crash_mtd7.img
-    1. 首先使用 WinSCP，将修改过的 crash_mtd7.img 上传到路由器的 /tmp 目录下，然后执行下面命令刷入并重启路由器。
+    1. 首先使用 WinSCP，将修改过的 crash_mtd7.img 上传到路由器的 /tmp 目录下，然后执行下面命令刷入并重启路由器
         ```shell
         mtd -r write /tmp/crash_mtd7.img crash
         ```
-    2. 上传修改过的 Bdata_mtd5.img，刷入并重启。
+    2. 上传修改过的 Bdata_mtd5.img，刷入并重启
         ```shell
         mtd -r write /tmp/Bdata_mtd5.img Bdata
         ```
