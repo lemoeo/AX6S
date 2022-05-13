@@ -102,8 +102,11 @@ Telnet / SSH 用户名：root
       ```shell
       # 创建一个目录并进入目录
       mkdir /data/auto_ssh && cd /data/auto_ssh
-      # 下载脚本
+      # 下载脚本，如果使用 GitHub 源下载失败，可以尝试使用 jsDelivr CDN 源进行下载
+      # GitHub 源
       curl -O https://github.com/lemoeo/AX6S/raw/main/auto_ssh.sh
+      # jsDelivr CDN 源
+      curl -O https://cdn.jsdelivr.net/gh/lemoeo/AX6S@main/auto_ssh.sh
       # 添加执行权限
       chmod +x auto_ssh.sh
       # 添加开机自动运行
@@ -178,25 +181,26 @@ export url='https://shellclash.ga' && sh -c "$(curl -kfsSl $url/install.sh)" && 
     ```
     config interface 'wan'
             option proto 'pppoe'
-            option peerdns '0'
-            option username 'xxxxxxxxxxxx'
-            option password 'xxxxxx'
+            option mtu '1500'
             option special '0'
+            option username 'xxxxxxxxxxxx'
             option mru '1480'
-            option ifname 'eth4'
+            option password 'xxxxxx'
+            option ifname 'eth1'
+            option last_succeed '1'
             option ipv6 'auto'
     ```
-    其中 option ifname 'eth4' 表示此接口使用的物理网卡是 `eth4`
+    其中 `option ifname 'eth1'` 表示此接口使用的物理网卡是 `eth1`
 
     编辑文件 `/etc/config/network`，在文件尾部添加如下配置：
     ```
-    config interface 'modem'                  
-            option proto 'static'             
-            option ifname 'eth4'            
-            option ipaddr '192.168.1.100'     
-            option netmask '255.255.255.0' 
+    config interface 'modem'
+            option proto 'static'
+            option ifname 'eth1'
+            option ipaddr '192.168.1.100'
+            option netmask '255.255.255.0'
     ```
-    option ifname 和 wan 的 option ifname 相同，option ipaddr 设置为和光猫相同网段的IP地址。
+    注意：option ifname 和 wan 的 option ifname 相同，option ipaddr 设置为和光猫相同网段的IP地址。
 
 3. 编辑防火墙配置文件 `vim /etc/config/firewall`，找到如下配置：
     ```
