@@ -37,7 +37,7 @@
 
     # 下载脚本文件，使用 GitHub 地址下载失败可以使用 jsDelivr CDN 地址进行下载
     # GitHub 地址
-    curl -O https://github.com/lemoeo/AX6S/raw/main/auto_ssh.sh
+    curl -O https://raw.githubusercontent.com/lemoeo/AX6S/main/auto_ssh.sh
     # jsDelivr CDN 地址
     curl -O https://cdn.jsdelivr.net/gh/lemoeo/AX6S@main/auto_ssh.sh
 
@@ -184,7 +184,7 @@
 
     # 下载脚本文件，使用 GitHub 地址下载失败可以使用 jsDelivr CDN 地址进行下载
     # GitHub 地址
-    curl -O https://github.com/lemoeo/AX6S/raw/main/auto_ssh.sh
+    curl -O https://raw.githubusercontent.com/lemoeo/AX6S/main/auto_ssh.sh
     # jsDelivr CDN 地址
     curl -O https://cdn.jsdelivr.net/gh/lemoeo/AX6S@main/auto_ssh.sh
 
