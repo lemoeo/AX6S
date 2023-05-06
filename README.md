@@ -8,7 +8,7 @@
 2. 获取 Telnet & SSH 登录路由器的 root 用户密码  
 打开 https://miwifi.dev/ssh ，输入小米路由器管理后台首页显示的序列号（SN），点击 Calc 即可计算出密码。
 
-3. 开启 SSH 服务  
+3. 手动开启 SSH 服务  
 使用 Telnet 协议连接路由器，执行下面 `开启 SSH 服务` 的命令，命令执行成功后就可以使用 SSH 协议连接路由器了。  
     ```shell
     # Telnet 连接信息
@@ -30,33 +30,24 @@
 
 4. 自动开启 SSH 服务  
 经过上面的步骤，已经成功在小米路由器上解锁 SSH 服务，但是由于小米路由器是 Snapshot 系统，重启会重置为最初状态，导致解锁 SSH 失效。  
-解决办法：添加一个开机自动执行的脚本，来实现自动开启 SSH 服务：  
+解决办法：创建一个脚本添加到开机自启动，来实现自动开启 SSH 服务：
     ```shell
-    # 创建一个目录用于放置脚本文件
+    # 创建一个目录
     mkdir /data/auto_ssh && cd /data/auto_ssh
 
     # 下载脚本文件，使用 GitHub 地址下载失败可以使用 jsDelivr CDN 地址进行下载
     # GitHub 地址
-    curl -O https://raw.githubusercontent.com/lemoeo/AX6S/main/auto_ssh.sh
+    curl -kfsSL -O https://raw.githubusercontent.com/lemoeo/AX6S/main/auto_ssh.sh && chmod +x auto_ssh.sh
     # jsDelivr CDN 地址
-    curl -O https://cdn.jsdelivr.net/gh/lemoeo/AX6S@main/auto_ssh.sh
+    curl -kfsSL -O https://cdn.jsdelivr.net/gh/lemoeo/AX6S@main/auto_ssh.sh && chmod +x auto_ssh.sh
 
-    # 为脚本增加可执行权限
-    chmod +x auto_ssh.sh
-
-    # 添加开机自动执行 auto_ssh.sh 脚本
-    uci set firewall.auto_ssh=include
-    uci set firewall.auto_ssh.type='script'
-    uci set firewall.auto_ssh.path='/data/auto_ssh/auto_ssh.sh'
-    uci set firewall.auto_ssh.enabled='1'
-    uci commit firewall
+    # 执行下面命令解锁 SSH 并添加开机自启动
+    ./auto_ssh.sh install
     ```
 
-    如果不需要自动开启 SSH 服务，使用下面命令移除即可：  
+    如果不需要自动开启 SSH 服务，使用下面命令移除开机自启动：
     ```shell
-    # 移除开机自动执行 auto_ssh.sh 脚本
-    uci delete firewall.auto_ssh
-    uci commit firewall
+    ./auto_ssh.sh uninstall
     ```
 
 5. 如何切换回稳定版系统  
@@ -104,7 +95,9 @@
 
     3. 打开 WinSCP ，使用 SCP 协议连接路由器，将备份的 Bdata_mtd5.img 和 crash_mtd7.img 下载保存。
 
-3. 修改 Bdata 和 crash 实现固化 Telnet / SSH
+3. 修改 Bdata 和 crash 实现固化 Telnet / SSH  
+    > 修改之前建议备份 Bdata_mtd5.img 和 crash_mtd7.img 源文件，以免出现问题可以进行恢复。
+
     1. 使用 HxD.exe 打开 crash_mtd7.img，将开头修改为 `A5 5A 00 00`，然后保存即可，如图所示：
 
         ![image](https://cdn.jsdelivr.net/gh/lemoeo/AX6S@main/doc/1.png)
@@ -145,15 +138,17 @@
 
         ![image](https://cdn.jsdelivr.net/gh/lemoeo/AX6S@main/doc/10.png)
 
-4. 刷入修改过的 Bdata_mtd5.img 和 crash_mtd7.img
-    1. 首先使用 WinSCP，将修改后的 crash_mtd7.img 上传到路由器的 /tmp 目录下，执行下面命令刷入然后重启路由器：
+4. 刷入修改完成的 Bdata_mtd5.img 和 crash_mtd7.img
+    1. 首先使用 WinSCP，将修改后的 crash_mtd7.img 上传到路由器的 /tmp 目录下，执行下面命令刷入并重启路由器：
         ```shell
         mtd -r write /tmp/crash_mtd7.img crash
+        reboot
         ```
 
-    2. 上传修改后的 Bdata_mtd5.img，执行命令刷入然后重启路由器：
+    2. 上传修改后的 Bdata_mtd5.img，执行命令刷入并重启路由器：
         ```shell
         mtd -r write /tmp/Bdata_mtd5.img Bdata
+        reboot
         ```
 
     3. 清除解锁（修复 WIFI 客户端数量显示、Internet 灯不亮等一些奇怪的问题）
@@ -162,7 +157,7 @@
         reboot
         ```
 
-> 固化完成，以后不管是恢复出厂设置还是用官方修复工具刷机，Telnet 默认都是开启的状态。  
+> 固化完成，以后无论是恢复出厂设置还是用官方修复工具刷机，Telnet 默认都是开启的状态。  
 
 > 完成固化的路由器，恢复出厂设置或者刷机后只需要以下步骤解锁 SSH 服务（因为官方固件中默认限制了稳定版不能打开 SSH 服务）  
 > 具体步骤参考：`固化后如何解锁 SSH 服务`
@@ -177,32 +172,24 @@
     ```
 
 - 自动解锁 SSH 服务  
-由于小米路由器 Snapshot 系统的特性，重启会恢复系统文件导致解锁 SSH 失效，可以添加一个开机自动运行的脚本来实现路由器重启后自动解锁 SSH 服务：
+由于小米路由器 Snapshot 系统的特性，重启会恢复系统文件导致解锁 SSH 失效，创建一个脚本添加到开机自启动，来实现自动开启 SSH 服务：
     ```shell
-    # 创建一个目录用于放置脚本文件
+    # 创建一个目录
     mkdir /data/auto_ssh && cd /data/auto_ssh
 
     # 下载脚本文件，使用 GitHub 地址下载失败可以使用 jsDelivr CDN 地址进行下载
     # GitHub 地址
-    curl -O https://raw.githubusercontent.com/lemoeo/AX6S/main/auto_ssh.sh
+    curl -kfsSL -O https://raw.githubusercontent.com/lemoeo/AX6S/main/auto_ssh.sh && chmod +x auto_ssh.sh
     # jsDelivr CDN 地址
-    curl -O https://cdn.jsdelivr.net/gh/lemoeo/AX6S@main/auto_ssh.sh
+    curl -kfsSL -O https://cdn.jsdelivr.net/gh/lemoeo/AX6S@main/auto_ssh.sh && chmod +x auto_ssh.sh
 
-    # 为脚本增加可执行权限
-    chmod +x auto_ssh.sh
-
-    # 添加开机自动执行解锁 SSH 脚本
-    uci set firewall.auto_ssh=include
-    uci set firewall.auto_ssh.type='script'
-    uci set firewall.auto_ssh.path='/data/auto_ssh/auto_ssh.sh'
-    uci set firewall.auto_ssh.enabled='1'
-    uci commit firewall
+    # 执行下面命令解锁 SSH 并添加开机自启动
+    ./auto_ssh.sh install
     ```
 
-- 移除开机自动执行解锁 SSH 脚本：
+- 移除开机自动解锁 SSH 服务：
     ```shell
-    uci delete firewall.auto_ssh
-    uci commit firewall
+    ./auto_ssh.sh uninstall
     ```
 
 > 参考教程：  
